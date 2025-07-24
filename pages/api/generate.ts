@@ -9,14 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") return res.status(405).end();
 
   const { topic } = req.body;
-
-  // Debug: pastikan API Key terbaca
-  console.log("OPENAI KEY:", process.env.OPENAI_API_KEY?.slice(0, 8) + "...");
-
-  // Timestamp untuk variasi hasil
   const timestamp = new Date().toISOString();
 
-  // Random gaya penulisan
   const styles = [
     "gaya naratif reflektif dengan sentuhan emosional",
     "gaya penjabaran tajam seperti kolumnis opini digital",
@@ -60,7 +54,7 @@ Ketentuan:
 Terapkan gaya penulisan: ${randomStyle}
 
 Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya. Harus siap tampil langsung di halaman web.
-          `.trim(),
+        `.trim(),
         },
         {
           role: "user",
@@ -70,7 +64,7 @@ Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya.
     });
 
     const article = response.choices[0]?.message?.content || "Artikel gagal dibuat.";
-    res.status(200).json({ result: article });
+    res.status(200).json({ result: article }); // ← INI YANG PALING PENTING
   } catch (error: any) {
     console.error("Error generating article:", error);
     res.status(500).json({ error: error.message || "Failed to generate article" });
