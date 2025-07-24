@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo", // ✅ Pake model yang dijamin bisa di akun gratis
       temperature: 1.2,
       top_p: 0.95,
       presence_penalty: 0.5,
@@ -54,7 +54,7 @@ Ketentuan:
 Terapkan gaya penulisan: ${randomStyle}
 
 Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya. Harus siap tampil langsung di halaman web.
-        `.trim(),
+          `.trim(),
         },
         {
           role: "user",
@@ -64,7 +64,7 @@ Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya.
     });
 
     const article = response.choices[0]?.message?.content || "Artikel gagal dibuat.";
-    res.status(200).json({ result: article }); // ← INI YANG PALING PENTING
+    res.status(200).json({ result: article }); // ✅ Ini biar frontend lu gak error replace
   } catch (error: any) {
     console.error("Error generating article:", error);
     res.status(500).json({ error: error.message || "Failed to generate article" });
