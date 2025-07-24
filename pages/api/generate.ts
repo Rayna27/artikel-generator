@@ -10,6 +10,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { topic } = req.body;
 
+  // Debug: pastikan API Key terbaca
+  console.log("OPENAI KEY:", process.env.OPENAI_API_KEY?.slice(0, 8) + "...");
+
   // Timestamp untuk variasi hasil
   const timestamp = new Date().toISOString();
 
@@ -27,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // pakai model paling baru
+      model: "gpt-4o",
       temperature: 1.2,
       top_p: 0.95,
       presence_penalty: 0.5,
@@ -66,10 +69,10 @@ Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya.
       ],
     });
 
-    const article = response.choices[0].message.content;
-    res.status(200).json({ article });
-  } catch (error) {
+    const article = response.choices[0]?.message?.content || "Artikel gagal dibuat.";
+    res.status(200).json({ result: article });
+  } catch (error: any) {
     console.error("Error generating article:", error);
-    res.status(500).json({ error: "Failed to generate article" });
+    res.status(500).json({ error: error.message || "Failed to generate article" });
   }
 }
