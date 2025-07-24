@@ -6,12 +6,27 @@ const openai = new OpenAI({
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).end();
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   const { topic } = req.body;
-  if (!topic || topic.trim() === "") {
-    return res.status(400).json({ error: "Topik tidak boleh kosong" });
+  const timestamp = new Date().toISOString();
+
+  if (!topic || typeof topic !== "string" || topic.trim() === "") {
+    return res.status(400).json({ error: "Topik tidak boleh kosong." });
   }
+
+  const styles = [
+    "gaya naratif reflektif dengan sentuhan emosional",
+    "gaya penjabaran tajam seperti kolumnis opini digital",
+    "gaya informatif lugas seperti jurnalis tren teknologi",
+    "gaya visual dan deskriptif seperti konten kreator profesional",
+    "gaya storytelling ringan namun membangun semangat",
+    "gaya eksplanatif dengan analogi unik dan ilustratif",
+    "gaya observatif seolah pengamat sosial budaya",
+  ];
+  const randomStyle = styles[Math.floor(Math.random() * styles.length)];
 
   try {
     const response = await openai.chat.completions.create({
@@ -24,27 +39,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         {
           role: "system",
           content: `
-Kamu adalah penulis artikel profesional dan kreatif. Tulis artikel panjang berbentuk HTML lengkap dengan:
+Kamu adalah penulis artikel profesional dan kreatif. Tulis artikel panjang berbentuk HTML dengan struktur lengkap sebagai berikut:
 
-- <h1>Judul panjang dan unik</h1>
-- <p>Pembuka</p>
-- 9-12 <h2> dan <p>
-- Penutup yang kuat
+<h1>Judul artikel panjang, unik, dan menarik</h1>
+<p>Pembuka 1 paragraf yang langsung mengajak pembaca untuk menyimak lebih lanjut</p>
 
-Gaya penulisan harus variatif dan kredibel.
+<h2>Subjudul 1</h2>
+<p>Paragraf isi yang padat dan relevan</p>
+
+(Sertakan 9–12 subjudul <h2>, masing-masing diikuti 1 <p> yang berisi penjelasan solid dan tidak generik)
+
+Ketentuan:
+- Gaya penulisan harus: informatif, kredibel, persuasif, dan menggugah semangat
+- Gunakan kosakata yang sedang trending di Google Trends Indonesia jika cocok
+- Setiap paragraf harus membawa insight atau sudut pandang baru
+- Jangan mengulang struktur, gaya, atau isi dari artikel sebelumnya
+- Variasikan gaya, ritme, dan diksi agar tidak membosankan
+- Penutup tidak boleh klise — harus diakhiri dengan kalimat yang kuat dan mendorong aksi
+
+Terapkan gaya penulisan: ${randomStyle}
+
+Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya. Harus siap tampil langsung di halaman web.
           `.trim(),
         },
         {
           role: "user",
-          content: `Tulis artikel dengan topik: ${topic}`,
+          content: `Tulis artikel dengan topik: ${topic} — ${timestamp}`,
         },
       ],
     });
 
-    const article = response.choices?.[0]?.message?.content || "Artikel gagal dibuat.";
+    const article = response.choices?.[0]?.message?.content;
+    if (!article) {
+      throw new Error("Gagal mendapatkan konten dari OpenAI");
+    }
+
     res.status(200).json({ result: article });
   } catch (error: any) {
-    console.error("Error generating article:", error);
-    res.status(500).json({ error: error.message || "Failed to generate article" });
+    console.error("❌ Error generate:", error);
+    res.status(500).json({ error: error.message || "Gagal membuat artikel" });
   }
 }
