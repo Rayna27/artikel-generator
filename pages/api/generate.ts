@@ -6,17 +6,14 @@ const openai = new OpenAI({
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).end();
 
   const { topic } = req.body;
+
+  // Timestamp untuk variasi hasil
   const timestamp = new Date().toISOString();
 
-  if (!topic || typeof topic !== "string" || topic.trim() === "") {
-    return res.status(400).json({ error: "Topik tidak boleh kosong." });
-  }
-
+  // Random gaya penulisan
   const styles = [
     "gaya naratif reflektif dengan sentuhan emosional",
     "gaya penjabaran tajam seperti kolumnis opini digital",
@@ -30,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o", // pakai model paling baru
       temperature: 1.2,
       top_p: 0.95,
       presence_penalty: 0.5,
@@ -69,14 +66,10 @@ Output hanya dalam format HTML — tanpa komentar, penjelasan, atau tag lainnya.
       ],
     });
 
-    const article = response.choices?.[0]?.message?.content;
-    if (!article) {
-      throw new Error("Gagal mendapatkan konten dari OpenAI");
-    }
-
-    res.status(200).json({ result: article });
-  } catch (error: any) {
-    console.error("❌ Error generate:", error);
-    res.status(500).json({ error: error.message || "Gagal membuat artikel" });
+    const article = response.choices[0].message.content;
+    res.status(200).json({ article });
+  } catch (error) {
+    console.error("Error generating article:", error);
+    res.status(500).json({ error: "Failed to generate article" });
   }
 }
